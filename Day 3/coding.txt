@@ -1,0 +1,208 @@
+Since it's a large project, I'll provide you with a simplified version of the code, focusing on the main components and functionalities. Please note that this code assumes you have basic knowledge of React, React Router, and CSS. Here's a simplified implementation:
+
+jsx
+// App.js
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import RecipeList from './components/RecipeList';
+import SingleRecipe from './components/SingleRecipe';
+import RecipeForm from './components/RecipeForm';
+import './App.css';
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route exact path="/" component={RecipeList} />
+          <Route exact path="/recipe/:id" component={SingleRecipe} />
+          <Route exact path="/add" component={RecipeForm} />
+          <Route exact path="/edit/:id" component={RecipeForm} />
+        </Switch>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+
+// RecipeList.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { getRecipes, deleteRecipe } from '../api/recipeApi';
+
+const RecipeList = () => {
+  const [recipes, setRecipes] = useState([]);
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      const data = await getRecipes();
+      setRecipes(data);
+    };
+    fetchRecipes();
+  }, []);
+
+  const handleDelete = async (id) => {
+    await deleteRecipe(id);
+    setRecipes(recipes.filter(recipe => recipe.id !== id));
+  };
+
+  return (
+    <div>
+      <h1>Recipe List</h1>
+      <ul>
+        {recipes.map(recipe => (
+          <li key={recipe.id}>
+            <Link to={`/recipe/${recipe.id}`}>{recipe.title}</Link>
+            <button onClick={() => handleDelete(recipe.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+      <Link to="/add">Add Recipe</Link>
+    </div>
+  );
+};
+
+export default RecipeList;
+
+// SingleRecipe.js
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { getRecipe } from '../api/recipeApi';
+
+const SingleRecipe = () => {
+  const { id } = useParams();
+  const [recipe, setRecipe] = useState(null);
+
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      const data = await getRecipe(id);
+      setRecipe(data);
+    };
+    fetchRecipe();
+  }, [id]);
+
+  return (
+    <div>
+      {recipe && (
+        <div>
+          <h2>{recipe.title}</h2>
+          <p>{recipe.description}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SingleRecipe;
+
+// RecipeForm.js (for both adding and editing)
+import React, { useState, useEffect } from 'react';
+import { useHistory, useParams } from 'react-router-dom';
+import { addRecipe, getRecipe, updateRecipe } from '../api/recipeApi';
+
+const RecipeForm = () => {
+  const { id } = useParams();
+  const history = useHistory();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (id) {
+      const fetchRecipe = async () => {
+        const data = await getRecipe(id);
+        setTitle(data.title);
+        setDescription(data.description);
+      };
+      fetchRecipe();
+    }
+  }, [id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (id) {
+      await updateRecipe(id, { title, description });
+    } else {
+      await addRecipe({ title, description });
+    }
+    history.push('/');
+  };
+
+  return (
+    <div>
+      <h2>{id ? 'Edit Recipe' : 'Add Recipe'}</h2>
+      <form onSubmit={handleSubmit}>
+        <label>Title:</label>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <label>Description:</label>
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        <button type="submit">{id ? 'Update' : 'Add'}</button>
+      </form>
+    </div>
+  );
+};
+
+export default RecipeForm;
+
+// recipeApi.js (mock data)
+const recipes = [
+  { id: 1, title: 'Recipe 1', description: 'Description for recipe 1.' },
+  { id: 2, title: 'Recipe 2', description: 'Description for recipe 2.' },
+];
+
+export const getRecipes = async () => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(recipes);
+    }, 500);
+  });
+};
+
+export const getRecipe = async (id) => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(recipes.find(recipe => recipe.id === parseInt(id)));
+    }, 500);
+  });
+};
+
+export const addRecipe = async (recipe) => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      recipe.id = recipes.length + 1;
+      recipes.push(recipe);
+      resolve(recipe);
+    }, 500);
+  });
+};
+
+export const updateRecipe = async (id, updatedRecipe) => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const index = recipes.findIndex(recipe => recipe.id === parseInt(id));
+      if (index !== -1) {
+        recipes[index] = { ...recipes[index], ...updatedRecipe };
+        resolve(updatedRecipe);
+      } else {
+        resolve(null);
+      }
+    }, 500);
+  });
+};
+
+export const deleteRecipe = async (id) => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const index = recipes.findIndex(recipe => recipe.id === parseInt(id));
+      if (index !== -1) {
+        recipes.splice(index, 1);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 500);
+  });
+};
+
+
+This code provides a basic structure for your gym company's customer management system using React. You would need to implement the backend functionality for CRUD operations in recipeApi.js. Also, make sure to style your components according to your preferences using CSS or a CSS framework.
